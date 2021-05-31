@@ -18,15 +18,13 @@ pygame.display.set_icon(icon)
 
 #set framerate
 clock = pygame.time.Clock()
-fps = 65
+fps = 75
 
 #game variables
 black = (0, 0, 0)
 white = (255, 255, 255)
 blue = (0,0,255)
-outside_col = (
-0, 2, 18
-)
+outside_col = (0, 2, 18)
 red = (255, 0, 0)
 green = (0, 255, 0)
 moving_left = False
@@ -39,6 +37,7 @@ shoot_ok = True
 radius1 = 160
 radius2 = 30
 enemy_list = []
+item_group = pygame.sprite.Group()
 score = 0
 highscore = 0
 font = pygame.font.SysFont('Futura', 30)
@@ -56,12 +55,16 @@ def draw_text(text, font, text_col, x, y):
     img = font.render(text, True, text_col)
     screen.blit(img, (x, y))
 
-def get_random() -> tuple[int, int, int]:
+def get_random():
     rand_x = random.randint(1, 800)
     rand_y = random.randint(1, 800)
-    rand_enemies = random.randint(1, 3)
 
-    return [rand_x, rand_y, rand_enemies]
+    return rand_x, rand_y
+
+def get_rand_enemies():
+    rand_enemies = random.randint(2, 4)
+
+    return rand_enemies
 
 def draw_img(img, x, y):
     img = img
@@ -72,7 +75,7 @@ class Player(pygame.sprite.Sprite):
     def __init__(self, image, x, y, speed, damage):
         pygame.sprite.Sprite.__init__(self)
         self.alive = True
-        self.max_health = 100
+        self.max_health = 1000
         self.health = self.max_health
         self.damage = damage
         img = pygame.image.load("./assets/fgame/hero.png")
@@ -117,19 +120,32 @@ class Player(pygame.sprite.Sprite):
                     enemy.health -= self.damage
 
     def update(self, enemy_group):
-        if pygame.sprite.spritecollide(self, enemy_group, False):
-            self.health -= enemy.damage
+        for enemy in enemy_group:
+            if pygame.sprite.spritecollide(self, enemy_group, False) and enemy.alive:
+                self.health -= enemy.damage
+                #print("i can't do this")
 
+        if pygame.sprite.spritecollide(self, item_group, False):
+            for item in item_group:
+                if item.item_type == 'Health':
+                    item.kill()
+                    item_group.empty()
+                    self.health += 25
+                else:
+                    pass
         
 
     def check_alive(self):
         if self.health <= 0:
             self.health = 0
             self.speed = 0
+            enemy.speed = 0
             self.alive = False
 
     def draw_hit_zone(self):
-        self.hit_zone = pygame.draw.circle(screen, white, (self.rect.x + 15, self.rect.y + 14), 160)
+        #self.hit_zone = pygame.draw.circle(screen, white, (self.rect.x + 15, self.rect.y + 14), 160)
+        #self.hit_zone.center = self.rect.center
+        self.hit_zone = pygame.draw.rect(screen, white, (self.rect.x - 130, self.rect.y - 135, 300, 300))
         self.hit_zone.center = self.rect.center
 
 
@@ -168,6 +184,17 @@ class Enemy(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.center = (x, y)
 
+    def reset(self):
+        self.speed = 2
+        self.alive = True
+
+    def create_enemy(self, rand_x, rand_y):
+        self.speed = 2
+        self.alive = True
+        #print(rand_damage)
+        enemy = Enemy(rand_x, rand_y, 2, 1)
+        enemy_group.add(enemy)
+
     def move_towards_player(self, player):
         # Find direction vector (dx, dy) between enemy and player.
         dx, dy = player.rect.x - self.rect.x, player.rect.y - self.rect.y
@@ -182,15 +209,19 @@ class Enemy(pygame.sprite.Sprite):
     
 
     def spawn(self):
-        rand_x, rand_y, rand_enemies = get_random()
+        #self.reset()
+        rand_x, rand_y = get_random()
+        
+        rand_enemies = get_rand_enemies()
         for enemy in range(rand_enemies):
-            enemy = Enemy(rand_x, rand_y, 2, self.damage + 2)
-            enemy_group.add(enemy)
+            self.create_enemy(rand_x, rand_y)
 
 
     def draw_hit_zone(self):
-        for enemy in enemy_group:
-            self.hit_zone = pygame.draw.circle(screen, white, (self.rect.x + 15, self.rect.y + 25), 30)
+        #for enemy in enemy_group:
+            #self.hit_zone = pygame.draw.circle(screen, white, (self.rect.x + 15, self.rect.y + 25), 30)
+            #self.hit_zone.center = self.rect.center
+            self.hit_zone = pygame.draw.rect(screen, white, (self.rect.x - 15, self.rect.y - 15, 70, 70))
             self.hit_zone.center = self.rect.center
 
     def check_alive(self):
@@ -204,19 +235,37 @@ class Enemy(pygame.sprite.Sprite):
     def draw(self):
         screen.blit(self.image, self.rect)
 
+class ItemBox(pygame.sprite.Sprite):
+    def __init__(self, item_type, x, y):
+        pygame.sprite.Sprite.__init__(self)
+        self.item_type = item_type
+        self.image = pygame.image.load("./assets/img_4/icons/health_box.png")
+        self.rect = self.image.get_rect()
+        #self.rect.midtop = (x + TILE_SIZE // 2, y + (TILE_SIZE - self.image.get_height()))
 
+    def update(self):
+        global score
 
-player = Player(hero_img, SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2, 5, 25)
+        #check if player has collected the box
+        if pygame.sprite.collide_rect(self, player):
+            #check what kind of box it was
+            if self.item_type == 'Health':
+                player.health += 25
+                enemy.spawn()
+                if player.health > player.max_health:
+                    player.health = player.max_health
+
+    def draw(self):
+        screen.blit(self.image, self.rect)
+
+player = Player(hero_img, SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2, 5, 100)
 
 enemy = Enemy(200, 300, 2, 1)
 enemy_group.add(enemy)
-#enemy2 = Enemy(400, 500, 2, 1)
-#enemy_group.add(enemy2)
 
 
 health_bar = HealthBar(52, int(18.5), player.health, player.max_health)
 health_bar2 = HealthBar(52, 50, enemy.health, enemy.max_health)
-#health_bar3 = HealthBar(52, 100, enemy2.health, enemy2.max_health)
 
 run = True
 while run:
@@ -238,35 +287,36 @@ while run:
 
     #show score
     draw_text(f'Score: {score}', font, white, 700, 10)
+    draw_text(f'Highscore: {highscore}', font, white, 660, 40)
 
     #show the healthbar
     draw_img(health_box_img, 10, 10)
     health_bar.draw(player.health)
     health_bar2.draw(enemy.health)
-    #health_bar3.draw(enemy2.health)
 
     #player.draw_hit_zone()
     player.draw()
     player.check_alive()
     player.update(enemy_group)
 
-    #for enemy in enemy_group:   
+    #enemy.draw_hit_zone()   
     enemy.draw()
     enemy.move_towards_player(player)
-    #enemy.draw_hit_zone()
     enemy.check_alive()
     enemy.update()
 
     for enemy in enemy_group:
         if enemy.alive == False:
             score += 1
-            enemy.kill()
             enemy.spawn()
+            enemy.kill()
 
 
-
+    if score > highscore:
+        highscore = score
+        
     with open('high_score.dat', 'wb') as file:
-        pickle.dump(highscore, file)
+            pickle.dump(highscore, file)
     
     screen.blit( MANUAL_CURSOR, ( pygame.mouse.get_pos() ) )
 
@@ -276,16 +326,12 @@ while run:
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_a and player.alive:
                 move = 1
-                #print(moving_left)
             if event.key == pygame.K_d and player.alive:
                 move = 2
-                #print(moving_right)
             if event.key == pygame.K_s and player.alive:
                 move = 3
-                #print(moving_down)
             if event.key == pygame.K_w and player.alive:
                 move = 4
-                #print(moving_up)
         if event.type == MOUSEBUTTONDOWN and player.alive:
             player.shoot()
 
