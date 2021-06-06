@@ -598,10 +598,10 @@ while run:
 
     #enemy defs and actions and shit
     for enemy in enemy_group:
-        #enemy.move_towards_player(player)
+        enemy.move_towards_player(player)
         enemy.draw()
-        #enemy.check_alive()
-        #enemy.update()
+        enemy.check_alive()
+        enemy.update()
     if score > 5:
         boss.draw()
         boss.move_towards_player(player)
