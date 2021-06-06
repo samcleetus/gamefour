@@ -13,11 +13,11 @@ This is the first game I wrote from scratch, using all the skills I've learned f
 
 ## Images
 **Main Hall**
-![Main Room](/img/spawn_room.png?raw=true)
+![Main Room](/img/spawn_room.PNG)
 
 **Room 3**
-![Room 3](/img/room-3.png?raw=true)
+![Room 3](/img/room-3.PNG)
 
 **Room 5**
-![Room 5](/img/room-5.png?raw=true)
+![Room 5](/img/room-5.PNG)
 
