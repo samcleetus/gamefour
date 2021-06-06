@@ -13,11 +13,11 @@ This is the first game I wrote from scratch, using all the skills I've learned f
 
 ## Images
 **Main Hall**
-[[https://github.com/samcleetus/gamefour/blob/master/img/spawn_room.png|alt=spawn_room]]
+![Main Room](/img/spawn_room.png?raw=true)
 
 **Room 3**
-[[https://github.com/samcleetus/gamefour/blob/master/img/room-3.png|alt=Room_3]]
+![Room 3](/img/room-3.png?raw=true)
 
 **Room 5**
-[[https://github.com/samcleetus/gamefour/blob/master/img/room-5.png|alt=Room_3]]
+![Room 5](/img/room-5.png?raw=true)
 
